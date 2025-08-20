@@ -7,6 +7,9 @@ import router from './router';
 const app = createApp(App);
 const pinia = createPinia();
 
+// Set base URL globally
+axios.defaults.baseURL = "http://127.0.0.1:8000";
+
 // Make Axios globally available
 app.config.globalProperties.$axios = axios;
 app.use(router);

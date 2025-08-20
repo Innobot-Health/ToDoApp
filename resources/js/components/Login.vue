@@ -6,8 +6,7 @@
       @login-success="handleLoginSuccess" 
     />
 
-    <!-- Show Login if not logged in -->
-    <div v-else-if="!loggedIn">
+    <div v-else-if="!loggedIn && !showRegister">
       <h2>Login</h2>
       <form @submit.prevent="login">
         <input type="email" v-model="email" placeholder="Email" required />
@@ -15,12 +14,16 @@
         <button type="submit">Login</button>
       </form>
       <p v-if="error">{{ error }}</p>
-
-      <!-- Toggle button -->
-    <button v-if="!loggedIn" @click="toggleForm">
-      {{ showRegister ? 'Go to Login' : 'Go to Register' }}
-    </button>
+      <button @click="toggleForm">
+        {{ showRegister ? 'Go to Login' : 'Go to Register' }}
+      </button>
     </div>
+
+    <TaskList 
+      v-else 
+      :user="user" 
+      @logout="handleLogout" 
+    />
 
     <!-- Show TaskList if logged in -->
     <TaskList 

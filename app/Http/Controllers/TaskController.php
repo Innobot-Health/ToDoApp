@@ -1,106 +1,70 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
-use App\Repositories\Interfaces\TaskRepositoryInterface;
+
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Requests\UpdateTaskImageRequest;
+use App\Repositories\Interfaces\TaskRepositoryInterface;
+use Illuminate\Http\Request;
 use Exception;
 
 class TaskController extends Controller
 {
-    protected $tasks;
+    protected $taskRepo;
 
-    public function __construct(TaskRepositoryInterface $tasks)
+    public function __construct(TaskRepositoryInterface $taskRepo)
     {
-        $this->tasks = $tasks;
+        $this->taskRepo = $taskRepo;
     }
 
     public function index()
     {
-        try {
-            $user = Auth::user();
-            if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
-
-            return response()->json($this->tasks->all());
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to fetch tasks', 'details' => $e->getMessage()], 500);
-        }
-    }
-
-    public function store(StoreTaskRequest $request)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
-
-            $task = $this->tasks->create([
-                'title'   => $request->title,
-                'user_id' => $user->id
-            ]);
-
-            return response()->json($task, 201);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to create task', 'details' => $e->getMessage()], 500);
-        }
+        $tasks = $this->taskRepo->all(auth()->user());
+        return response()->json($tasks);
     }
 
     public function show($id)
     {
-        try {
-            $user = Auth::user();
-            if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
+        $task = $this->taskRepo->find($id);
+        if (!$task) return response()->json(['message' => 'Task not found'], 404);
+        return response()->json($task);
+    }
 
-            $task = $this->tasks->find($id);
+    public function store(StoreTaskRequest $request)
+    {
+        $task = $this->taskRepo->create(
+            ['title' => $request->title, 'completed' => false, 'user_id' => auth()->id()],
+            $request->file('image')
+        );
 
-            if (!$task) return response()->json(['message' => 'Task not found'], 404);
-
-            return response()->json($task);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to fetch task', 'details' => $e->getMessage()], 500);
-        }
+        return response()->json($task, 201);
     }
 
     public function update(UpdateTaskRequest $request, $id)
     {
-        try {
-            $user = Auth::user();
-            if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
+        $task = $this->taskRepo->find($id);
+        if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
-            $task = $this->tasks->find($id);
-            if (!$task) return response()->json(['message' => 'Task not found'], 404);
+        $task = $this->taskRepo->update($task, $request->only(['title', 'completed']), $request->file('image'));
+        return response()->json($task);
+    }
 
-            if (Gate::denies('update', $task)) {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
+    public function updateImage(UpdateTaskImageRequest $request, $id)
+    {
+        $task = $this->taskRepo->find($id);
+        if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
-            $updatedTask = $this->tasks->update($id, $request->only(['title', 'completed']));
-
-            return response()->json($updatedTask);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to update task', 'details' => $e->getMessage()], 500);
-        }
+        $task = $this->taskRepo->update($task, $request->only(['title', 'completed']), $request->file('image'));
+        return response()->json($task);
     }
 
     public function destroy($id)
     {
-        try {
-            $user = Auth::user();
-            if (!$user) return response()->json(['message' => 'Unauthenticated'], 401);
+        $task = $this->taskRepo->find($id);
+        if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
-            $task = $this->tasks->find($id);
-            if (!$task) return response()->json(['message' => 'Task not found'], 404);
-
-            if ($task->user_id !== $user->id && $user->role !== 'admin') {
-                return response()->json(['message' => 'Forbidden'], 403);
-            }
-
-            $this->tasks->delete($id);
-
-            return response()->json(['message' => 'Task deleted']);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Failed to delete task', 'details' => $e->getMessage()], 500);
-        }
+        $this->taskRepo->delete($task);
+        return response()->json(['message' => 'Task deleted successfully']);
     }
 }

@@ -3,81 +3,86 @@
 namespace App\Repositories;
 
 use App\Models\Task;
+use Illuminate\Support\Facades\Storage;
 use App\Repositories\Interfaces\TaskRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 
 class TaskRepository implements TaskRepositoryInterface
 {
-    public function all()
+    public function all($user)
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return collect(); // return empty collection if not authenticated
-        }
-
         if ($user->role === 'admin') {
-        return Task::where(function ($query) use ($user) {
-                $query->where('user_id', $user->id) // admin's own tasks
-                    ->orWhereHas('user', function ($q) {
-                        $q->where('role', '!=', 'admin'); // normal users' tasks
-                    });
-            })
-            ->latest()
-            ->get();
+            return Task::with('images', 'user')
+                ->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                          ->orWhereHas('user', fn($q) => $q->where('role', '!=', 'admin'));
+                })
+                ->latest()
+                ->get();
         }
-
-        return Task::where('user_id', $user->id)->latest()->get();
+        return Task::with('images')->where('user_id', $user->id)->latest()->get();
     }
 
     public function find($id)
     {
-        $user = Auth::user();
-
-        if (!$user) {
-            return null;
-        }
-
-        if ($user->role === 'admin') {
-            return Task::find($id); // single model
-        }
-
-        return Task::where('id', $id)
-                ->where('user_id', $user->id)
-                ->first(); // make sure it's first(), not get()
+        return Task::with('images')->find($id);
     }
 
-    public function create(array $data)
+    public function create(array $data, $image = null)
     {
-        if (!isset($data['user_id'])) {
-            $data['user_id'] = Auth::id(); // fallback to logged-in user
+        $task = Task::create($data);
+
+        if ($image) {
+            $path = $image->store('tasks', 'public');
+            $task->images()->create(['path' => $path]);
         }
 
-        return Task::create($data);
+        return $task->load('images');
     }
 
-    public function update($id, array $data)
+    public function update(Task $task, array $data, $image = null)
     {
-        $task = $this->find($id);
-
-        if (!$task) {
-            return null;
-        }
-
         $task->update($data);
 
-        return $task->fresh(); // always returns the latest model
-    }
+        if ($image) {
+            foreach ($task->images as $img) {
+                Storage::disk('public')->delete($img->path);
+                $img->delete();
+            }
 
-    public function delete($id)
-    {
-        $task = $this->find($id);
-
-        if (!$task) {
-            return false;
+            $path = $image->store('tasks', 'public');
+            $task->images()->create(['path' => $path]);
         }
 
-        return $task->delete(); // works now because $task is a model
+        return $task->load('images');
     }
 
+    public function updateImage(Task $task, array $data, $image)
+    {
+        $task->update($data);
+
+        $path = $image->store('tasks', 'public');
+
+        if ($task->images()->exists()) {
+            $img = $task->images()->first();
+            if (Storage::disk('public')->exists($img->path)) {
+                Storage::disk('public')->delete($img->path);
+            }
+            $img->update(['path' => $path]);
+        } else {
+            $task->images()->create(['path' => $path]);
+        }
+
+        return $task->load('images');
+    }
+
+    public function delete(Task $task)
+    {
+        foreach ($task->images as $img) {
+            Storage::disk('public')->delete($img->path);
+            $img->delete();
+        }
+
+        $task->delete();
+    }
 }

@@ -19,6 +19,20 @@ class Task extends Model
         'completed' => 'boolean',
     ];
 
+    // accessor so API can return completed instead of is_completed
+    protected $appends = ['completed'];
+
+    public function getCompletedAttribute()
+    {
+        return (bool) $this->attributes['completed'];
+    }
+
+    // Relationship with images
+    public function images()
+    {
+        return $this->hasMany(Image::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

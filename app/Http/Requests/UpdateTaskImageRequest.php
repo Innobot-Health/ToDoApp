@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTaskRequest extends FormRequest
+class UpdateTaskImageRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,7 @@ class UpdateTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'title'     => 'sometimes|string|max:255',
-            'completed' => 'sometimes|boolean',
-            'image'     => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'image' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
         ];
     }
 }
