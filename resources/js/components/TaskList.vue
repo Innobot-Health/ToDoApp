@@ -105,7 +105,7 @@ export default {
       this.newImage = null;
     },
 
-    async updateTitle(task) {
+    /* async updateTitle(task) {
       const formData = new FormData();
       formData.append('title', task.title);
 
@@ -128,7 +128,7 @@ export default {
       // Update local task
       const index = this.tasks.findIndex(t => t.id === task.id);
       this.tasks[index] = response.data;
-    },
+    }, */
 
     async onImageChange(event, task) {
       const file = event.target.files[0];

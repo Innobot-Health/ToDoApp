@@ -40,7 +40,7 @@ class TaskRepository implements TaskRepositoryInterface
         return $task->load('images');
     }
 
-    public function update(Task $task, array $data, $image = null)
+    /* public function update(Task $task, array $data, $image = null)
     {
         $task->update($data);
 
@@ -55,7 +55,7 @@ class TaskRepository implements TaskRepositoryInterface
         }
 
         return $task->load('images');
-    }
+    } */
 
     public function updateImage(Task $task, array $data, $image)
     {

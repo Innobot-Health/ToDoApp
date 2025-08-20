@@ -41,14 +41,14 @@ class TaskController extends Controller
         return response()->json($task, 201);
     }
 
-    public function update(UpdateTaskRequest $request, $id)
+    /* public function update(UpdateTaskRequest $request, $id)
     {
         $task = $this->taskRepo->find($id);
         if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
         $task = $this->taskRepo->update($task, $request->only(['title', 'completed']), $request->file('image'));
         return response()->json($task);
-    }
+    } */
 
     public function updateImage(UpdateTaskImageRequest $request, $id)
     {

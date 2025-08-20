@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);     // View tasks
     Route::get('/tasks/{id}', [TaskController::class, 'show']); // View single task
     Route::post('/tasks', [TaskController::class, 'store']);    // Create task
-    Route::put('/tasks/{task}', [TaskController::class, 'update']); // Update task
+    // Route::put('/tasks/{task}', [TaskController::class, 'update']); // Update task
     Route::post('/tasks/{task}/image', [TaskController::class, 'updateImage']); // Update image task
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']); // Admin-only delete
 });
