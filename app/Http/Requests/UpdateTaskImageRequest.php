@@ -22,7 +22,8 @@ class UpdateTaskImageRequest extends FormRequest
     public function rules()
     {
         return [
-            'image' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpg,jpeg,png,webp,gif|max:2048',
         ];
     }
 }

@@ -35,27 +35,39 @@ class TaskController extends Controller
     {
         $task = $this->taskRepo->create(
             ['title' => $request->title, 'completed' => false, 'user_id' => auth()->id()],
-            $request->file('image')
+            $request->file('images', []) // multiple images
         );
+
+        dd($request->all(), $request->file('images'));
 
         return response()->json($task, 201);
     }
 
-    /* public function update(UpdateTaskRequest $request, $id)
+    public function update(UpdateTaskRequest $request, $id)
     {
         $task = $this->taskRepo->find($id);
         if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
-        $task = $this->taskRepo->update($task, $request->only(['title', 'completed']), $request->file('image'));
+        $task = $this->taskRepo->update(
+            $task,
+            $request->only(['title', 'completed']),
+            $request->file('images', []) // multiple images
+        );
+
         return response()->json($task);
-    } */
+    }
 
     public function updateImage(UpdateTaskImageRequest $request, $id)
     {
         $task = $this->taskRepo->find($id);
         if (!$task) return response()->json(['message' => 'Task not found'], 404);
 
-        $task = $this->taskRepo->update($task, $request->only(['title', 'completed']), $request->file('image'));
+        $task = $this->taskRepo->update(
+            $task,
+            $request->only(['title', 'completed']),
+            $request->file('images', []) // multiple images
+        );
+
         return response()->json($task);
     }
 
