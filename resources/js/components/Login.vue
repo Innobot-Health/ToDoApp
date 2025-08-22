@@ -6,6 +6,12 @@
       @login-success="handleLoginSuccess" 
     />
 
+    <!-- Show Update Password page if toggled -->
+    <UpdatePassword 
+      v-else-if="!loggedIn && showUpdatePassword" 
+      @back-to-login="showUpdatePassword = false" 
+    />
+
     <div v-else-if="!loggedIn && !showRegister">
       <h2>Login</h2>
       <form @submit.prevent="login">
@@ -16,6 +22,9 @@
       <p v-if="error">{{ error }}</p>
       <button @click="toggleForm">
         {{ showRegister ? 'Go to Login' : 'Go to Register' }}
+      </button>
+      <button @click="showUpdatePassword = true">
+        Update Password
       </button>
     </div>
 
@@ -38,14 +47,16 @@
 <script>
 import Register from './Register.vue'
 import TaskList from './TaskList.vue'
+import UpdatePassword from './UpdatePassword.vue'
 
 export default {
-  components: { Register, TaskList },
+  components: { Register, TaskList, UpdatePassword },
   data() {
     return {
       loggedIn: false,
       user: null,
       showRegister: false,
+      showUpdatePassword: false,
       email: '',
       password: '',
       error: ''

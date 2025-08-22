@@ -23,7 +23,7 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'images.*' => 'image|mimes:jpg,jpeg,png,webp,gif|max:2048'
         ];
     }
 }

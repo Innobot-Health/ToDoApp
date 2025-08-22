@@ -28,48 +28,54 @@ class TaskRepository implements TaskRepositoryInterface
         return Task::with('images')->find($id);
     }
 
-    public function create(array $data, $image = null)
+    public function create(array $data, $images = [])
     {
         $task = Task::create($data);
 
-        if ($image) {
-            $path = $image->store('tasks', 'public');
-            $task->images()->create(['path' => $path]);
+        if (!empty($images)) {
+            foreach ($images as $image) {
+                $path = $image->store('tasks', 'public');
+                $task->images()->create(['path' => $path]);
+            }
         }
 
         return $task->load('images');
     }
 
-    public function update(Task $task, array $data, $image = null)
+    public function update(Task $task, array $data, $images = [])
     {
         $task->update($data);
 
-        if ($image) {
+        if (!empty($images)) {
+            // delete old ones
             foreach ($task->images as $img) {
                 Storage::disk('public')->delete($img->path);
                 $img->delete();
             }
 
-            $path = $image->store('tasks', 'public');
-            $task->images()->create(['path' => $path]);
+            // add new ones
+            foreach ($images as $image) {
+                $path = $image->store('tasks', 'public');
+                $task->images()->create(['path' => $path]);
+            }
         }
 
         return $task->load('images');
     }
 
-    public function updateImage(Task $task, array $data, $image)
+    public function updateImages(Task $task, array $data, $images = [])
     {
         $task->update($data);
 
-        $path = $image->store('tasks', 'public');
+        // delete old
+        foreach ($task->images as $img) {
+            Storage::disk('public')->delete($img->path);
+            $img->delete();
+        }
 
-        if ($task->images()->exists()) {
-            $img = $task->images()->first();
-            if (Storage::disk('public')->exists($img->path)) {
-                Storage::disk('public')->delete($img->path);
-            }
-            $img->update(['path' => $path]);
-        } else {
+        // add new
+        foreach ($images as $image) {
+            $path = $image->store('tasks', 'public');
             $task->images()->create(['path' => $path]);
         }
 
